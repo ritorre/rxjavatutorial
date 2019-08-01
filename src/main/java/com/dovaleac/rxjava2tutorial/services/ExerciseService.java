@@ -7,7 +7,12 @@ import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 
+import io.reactivex.functions.Function;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ExerciseService {
 
@@ -17,7 +22,10 @@ public class ExerciseService {
    * @return
    */
   public Flowable<String> getAllCharactersNames(Status status) {
-    return null;
+    return status
+        .getReadService()
+        .getAllCharacters()
+        .map(Character::getName);
   }
 
   /**
@@ -26,7 +34,8 @@ public class ExerciseService {
    * @return
    */
   public Flowable<String> getAllCharactersNamesSortedByNumberOfLetters(Status status) {
-    return null;
+    return getAllCharactersNames(status)
+        .sorted(Comparator.comparing(String::length));
   }
 
   /**
@@ -36,7 +45,11 @@ public class ExerciseService {
    * @return
    */
   public Flowable<Character> getAllCharactersWithTitles(Status status) {
-    return null;
+    return status
+        .getReadService()
+        .getAllCharacters()
+        .filter(character -> !character.getTitles().isEmpty())
+        .filter(character -> !character.getTitles().get(0).isEmpty());
   }
 
   /**
@@ -45,7 +58,9 @@ public class ExerciseService {
    * @return
    */
   public Maybe<Character> getCharacterWithMostTitles(Status status) {
-    return null;
+    return status.getReadService().getAllCharacters()
+        .reduce((character1, character2) ->
+            character1.getTitles().size() >= character2.getTitles().size() ? character1 : character2);
   }
 
   /**
@@ -55,7 +70,10 @@ public class ExerciseService {
    * @return
    */
   public Single<Character> getCharacterWithMostTitlesAsSingle(Status status) {
-    return null;
+    return status.getReadService().getAllCharacters()
+          .reduce((character1, character2) ->
+              character1.getTitles().size() >= character2.getTitles().size() ? character1 : character2)
+          .toSingle();
   }
 
   /**
@@ -64,7 +82,10 @@ public class ExerciseService {
    * @return
    */
   public Single<Map<String, Integer>> getHousesWithMottoLength(Status status) {
-    return null;
+    return status
+        .getReadService()
+        .getAllHouses()
+        .toMap(House::getName, house -> house.getWords().length());
   }
 
   /**
@@ -73,7 +94,12 @@ public class ExerciseService {
    * @return
    */
   public Flowable<Character> getAllDornishLords(Status status) {
-    return null;
+    return status
+        .getReadService()
+        .getAllHouses()
+        .filter(house -> house.getRegion().contains("Dorne"))
+        .map(House::getCurrentLord)
+        .flatMapMaybe(id -> status.getReadService().getCharacterById(id));
   }
 
   /**
